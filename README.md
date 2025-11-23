@@ -1,89 +1,114 @@
+
+---
+
 # Hashicorp Nomad, Consul, and Vault
 
-### Why run containers on Hashicorp code?  
+### Por que executar containers com código da Hashicorp?
 
-Nomadic is a Terraform framework to deploy Hashicorp minimal and secure container clusters.  Hashicorp ensures your dockers are up and running (fail-over for fault tolerance), and running securely (secrets rotation and AWS security). The Internet is a dangerous place. **Warship Not Whale**.
+Nomadic é um framework Terraform para implantar clusters mínimos e seguros de containers usando Hashicorp.
+A Hashicorp garante que seus containers Docker estejam em execução (com fail-over para tolerância a falhas) e funcionando de forma segura (rotação de segredos e segurança AWS). A Internet é um lugar perigoso. **Warship Not Whale**.
 
+### Framework Nomadic
 
-### Nomadic Framework
+1. Provisionamento IaC com Terraform para recursos do cluster.
+2. Criação opcional de VPC e recursos de suporte.
+3. Bootstrap do servidor via Instance UserData.
+4. Consul fornece registro de containers da aplicação.
+5. Vault fornece segredos para containers da aplicação.
+6. Nomad fornece o agendamento dos containers da aplicação.
 
-1. Terraform IaC provisioning of cluster resources.
-2. Optional VPC and supporting resource creation.
-3. Server bootstrapping via Instance UserData.
-4. Consul provides application container registration.
-5. Vault provides application container secrets.
-6. Nomad provides application container scheduling.
+O código Terraform do Nomadic implanta um cluster de (3) instâncias EC2 para implementar o menor footprint possível para executar containers com código da Hashicorp.
+Os seguintes serviços executam em cada nó do cluster Nomadic:
 
-Nomadic Terraform code deploys a (3) node EC2 instance cluster to implement the minimal deployment footprint possible to support running containers on Hashicorp code. The following services run on each Nomadic cluster node:
+1. Servidor Vault (uma instância ativa, duas em standby).
 
-1. Vault server (one instance in primary, two in standby).
-   1. Vault API tcp/8200
+   1. API Vault tcp/8200
 
-2. Consul server.
-   1. DNS: The DNS server (TCP and UDP) 8600
-   2. HTTP: The HTTP API (TCP Only) 8500
-   3. HTTPS: The HTTPs API (disabled) 8501
-   4. gRPC: The gRPC API	(disabled) 8502
-   5. LAN Serf: The Serf LAN port (TCP and UDP) 8301
-   6. Wan Serf: The Serf WAN port (TCP and UDP) 8302
-   7. server: Server RPC address (TCP Only) 8300
+2. Servidor Consul.
 
-3. Nomad server.
-   1. HTTP API tcp/4646
+   1. DNS: O servidor DNS (TCP e UDP) 8600
+   2. HTTP: A API HTTP (somente TCP) 8500
+   3. HTTPS: A API HTTPS (desabilitada) 8501
+   4. gRPC: A API gRPC (desabilitada) 8502
+   5. LAN Serf: Porta Serf LAN (TCP e UDP) 8301
+   6. WAN Serf: Porta Serf WAN (TCP e UDP) 8302
+   7. Servidor: Endereço RPC do servidor (somente TCP) 8300
+
+3. Servidor Nomad.
+
+   1. API HTTP tcp/4646
    2. RPC tcp/4647
    3. Serf WAN tcp/4648
 
-Nomadic deploys all of these services on each of the (3) EC2 cluster instances.
-- Nomad and Consul use the Raft protocol and EC2 autodiscovery for cluster convergence.
-- Consul reads a common encryption token from SSM Parameter.
-- Vault uses KMS auto-unsealing.
-- Vault uses one-active/two-standy design.
-- Consul and Nomad use three active node design (shared cluster state).
+Nomadic implanta todos esses serviços em cada uma das três instâncias EC2 do cluster.
 
+* Nomad e Consul usam o protocolo Raft e autodiscovery da EC2 para convergência do cluster.
+* Consul lê um token de criptografia comum do SSM Parameter.
+* Vault usa auto-unsealing via KMS.
+* Vault usa design de uma instância ativa e duas em standby.
+* Consul e Nomad usam design de três nós ativos (estado compartilhado do cluster).
 
-### Nomadic Deployment
+### Implantação Nomadic
 
-Deploying the cluster:
+Para implantar o cluster:
 
-1. set variables in `terraform.tfvars`
+1. defina as variáveis em `terraform.tfvars`
 2. `terraform init`
 3. `terraform plan`
 4. `terraform apply`
 
+### Warships Nomadic e Warship Pipelines
 
-### Nomadic Warships and Warship Pipelines
+Warships são coleções de recursos que compõem uma aplicação.
+Isso inclui o pipeline necessário para atualizações e gerenciamento de ciclo de vida da aplicação.
 
-Warships are collections of resources that make up an application. This includes the pipeline necessary for application updates / lifecycle management. CodePipeline runs a unique pipeline for each application. Warship pipelines can run idempotently many times, updating on any application change, only if/when needed. Warship pipeline unit and integration testing finds breaking changes before code makes it to production, ensuring high change success confidence. Warship Applications can so be effortlessly updated dozens, even hundreds, or thousands of times a day. **Each Application Pipeline is a Unique Warship**, out on the dangerous open ocean of the internet, each with its own unique security profile and lifecycle.
+CodePipeline executa um pipeline único para cada aplicação.
+Pipelines Warship podem rodar quantas vezes forem necessárias, atualizando a aplicação apenas quando necessário.
+Testes de unidade e integração no pipeline Warship detectam falhas antes do código ir para produção, garantindo alta confiança nas mudanças.
+Aplicações Warship podem ser atualizadas dezenas, centenas ou milhares de vezes por dia sem esforço.
 
-Each Warship Application contains the following resources:
+**Cada Pipeline de Aplicação é um Warship único**, navegando no perigoso oceano aberto da internet, cada um com seu perfil de segurança e ciclo de vida próprios.
 
-1. EFS volume created and configured, including Route53 DNS entry.
-2. ELB frontend created and configured, including Route53 DNS entry.
-3. CodePipeline pipeline:
-   1. Unit and Integration pre-deployment test stages
-   2. Deploy and/or Update Dockers via Nomad API
-   3. Security and Acceptance post-deployment test stages
+Cada Aplicação Warship contém os seguintes recursos:
 
+1. Volume EFS criado e configurado, incluindo entrada DNS no Route53.
+2. ELB frontend criado e configurado, incluindo entrada DNS no Route53.
+3. Pipeline CodePipeline:
 
-### Warship Pipeline Deployment
+   1. Estágios de teste de unidade e integração pré-implantação
+   2. Implantação e/ou atualização de containers via API do Nomad
+   3. Estágios de teste de segurança e aceitação pós-implantação
 
-To deploy Nomadic Warship pipelines, use the `warships` directory as a template for your warship application directory. There should be a unique directory per application. You will need to configure this template for your specific application. Once configured, execute `terraform init` and `terraform apply` in this directory. This will create the CodePipeline pipeline, and the EFS and ELB resources required for your application.  The pipeline will deploy and/or update the warship application via the Nomad API.
+### Implantação de Warship Pipeline
 
-As each Warship is just a collection of Terraform resources, advanced users can use Terraform Remote State to manage Nomadic Warships, as opposed to maintaining an application deployment directory.
+Para implantar os pipelines Nomadic Warship, use o diretório `warships` como template para o diretório da sua aplicação Warship.
+Cada aplicação deve ter um diretório exclusivo.
 
+Depois de configurar o template conforme sua aplicação, execute `terraform init` e `terraform apply` nesse diretório.
+Isso criará o pipeline CodePipeline e os recursos EFS e ELB necessários para sua aplicação.
+O pipeline implantará e/ou atualizará a aplicação Warship via API do Nomad.
 
-### Pre-deployment Configuration
+Como cada Warship é apenas uma coleção de recursos Terraform, usuários avançados podem usar Terraform Remote State para gerenciar Warships Nomadic, ao invés de manter um diretório de implantação por aplicação.
 
-The following AWS SSM Parameter Store keys must be set before executing Nomadic deployment:
-1. `consul_encryption_key` This key is read by all consul nodes and is needed for Consul cluster quorum.
-2. `nomadic_ssh_key` This key is used for inter-cluster communications, and also for Warship pipelines to execute application changes.
+### Configuração pré-implantação
 
-Additionally, care must be taken to ensure variables in `terraform.tfvars` are set properly, according to user environment. By default, each Nomadic cluster node will be deployed in a separate subnet and availability zone.  Users can deploy into existing VPCs/Subnets by specifying values.  VPC and subnet resources are created new by default.
+As seguintes chaves do AWS SSM Parameter Store devem ser definidas antes de executar a implantação Nomadic:
 
+1. `consul_encryption_key` — Lida por todos os nós Consul e necessária para quorum do cluster Consul.
+2. `nomadic_ssh_key` — Usada para comunicação entre clusters e também para pipelines Warship realizarem mudanças na aplicação.
 
-### Nomadic Support
+Além disso, é necessário garantir que as variáveis em `terraform.tfvars` estejam configuradas corretamente para o ambiente do usuário.
+Por padrão, cada nó do cluster Nomadic será implantado em uma subnet e zona de disponibilidade separadas.
+Usuários podem implantar em VPCs/Subnets existentes informando os valores correspondentes.
+VPC e subnets são criadas automaticamente por padrão.
 
-Nomadic support is available `nomadic at hex7 dot com`.
+### Suporte Nomadic
+
+Suporte Nomadic está disponível em: `nomadic at hex7 dot com`.
 
 ### Warship Not Whale.
+
 ![alt text](https://github.com/nand0p/nomadic/blob/master/images/nomadic.png?raw=true)
+
+---
+
