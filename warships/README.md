@@ -1,22 +1,34 @@
+---
+
 # Warship Shared Resources
 
-### Each application, or Warship, has a unique journey and lifecycle.
-- The terraform resources in this directory are shared amongst all the warship application pipelines. 
-- Docker directory `nomadic_application_example`. This directory contains application Dockerfile and supporting files.
-- Terraform template directory `skeleton`. This example directory is used to deploy Warship Pipelines (CodePipelines).
+### Cada aplicação, ou Warship, tem uma jornada e um ciclo de vida únicos.
 
-###To create a Warship Application (container image, pipeline, and deployment):
-1. Deploy the shared resources (S3 and IAM).
-   1. Update `terraform.tfvars` in this directory as needed.
-   2. Execute `terraform init` and `terraform apply` in this existing directory.
-   3. Shared resources are published to SSM ParameterStore for pipeline usage.
-2. Deploy the individual warships (application pipelines)
-   1. Copy the `skeleton` directory to a unique application directory name.
-   2. Update `terraform.tfvars` in this directory as needed.
-   3. Execute `terraform init` and `terraform apply` in this new directory.
-   4. CodePipeline application warship pipeline is created and executed.
-      1. Application should now be live on the Nomadic Cluster.
-      2. Container should be running on Nomad
-      3. Container registration should be visible in Consul
-3. The Application Load Balancer and DNS configured and added to route53. (Optional)
-4. The EFS mount created and available to running containers for shared filesystem state (Optional).
+* Os recursos Terraform neste diretório são compartilhados entre todos os pipelines de aplicações Warship.
+* Diretório Docker `nomadic_application_example`. Este diretório contém o Dockerfile da aplicação e arquivos de suporte.
+* Diretório template Terraform `skeleton`. Este diretório de exemplo é usado para implantar Pipelines Warship (CodePipelines).
+
+### Para criar uma Warship Application (imagem de container, pipeline e implantação):
+
+1. Implante os recursos compartilhados (S3 e IAM).
+
+   1. Atualize `terraform.tfvars` neste diretório conforme necessário.
+   2. Execute `terraform init` e `terraform apply` neste diretório existente.
+   3. Os recursos compartilhados são publicados no SSM ParameterStore para uso dos pipelines.
+
+2. Implante as warships individuais (pipelines da aplicação).
+
+   1. Copie o diretório `skeleton` para um diretório único da aplicação.
+   2. Atualize `terraform.tfvars` neste diretório conforme necessário.
+   3. Execute `terraform init` e `terraform apply` neste novo diretório.
+   4. O pipeline CodePipeline da aplicação Warship é criado e executado.
+
+      1. A aplicação agora deve estar ativa no cluster Nomadic.
+      2. O container deve estar em execução no Nomad.
+      3. O registro do container deve estar visível no Consul.
+
+3. O Application Load Balancer e o DNS configurados e adicionados ao Route53. (Opcional)
+
+4. O volume EFS é criado e disponibilizado aos containers em execução para estado compartilhado de filesystem. (Opcional)
+
+---
