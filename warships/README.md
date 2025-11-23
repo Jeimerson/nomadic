@@ -2,7 +2,7 @@
 
 # Warship Shared Resources
 
-### Cada aplicação, ou Warship, tem uma jornada e um ciclo de vida únicos.
+### Cada aplicacao, ou Warship, tem uma jornada e um ciclo de vida unicos.
 
 * Os recursos Terraform neste diretório são compartilhados entre todos os pipelines de aplicações Warship.
 * Diretório Docker `nomadic_application_example`. Este diretório contém o Dockerfile da aplicação e arquivos de suporte.
