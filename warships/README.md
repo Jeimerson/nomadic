@@ -1,5 +1,3 @@
----
-
 # Warship Shared Resources
 
 ### Cada aplicacao, ou Warship, tem uma jornada e um ciclo de vida unicos.
